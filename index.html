@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AALLIE — Stream From Your Eyes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black: #080808;
+      --off-black: #111111;
+      --panel: #161616;
+      --border: #2a2a2a;
+      --white: #f0ede6;
+      --cream: #e8e2d5;
+      --accent: #ff3c1f;
+      --accent2: #ffb800;
+      --dim: #666;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* CUSTOM CURSOR */
+    .cursor {
+      width: 10px; height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(255,60,31,0.5);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9998;
+      transition: transform 0.4s ease, width 0.2s, height 0.2s, border-color 0.2s;
+    }
+    body:hover .cursor-ring { border-color: var(--accent); }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.35;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 48px;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 26px;
+      letter-spacing: 3px;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--accent);
+      padding: 10px 22px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--accent2); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 48px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 60% 40%, rgba(255,60,31,0.12) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 50% at 20% 70%, rgba(255,184,0,0.06) 0%, transparent 60%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 40px; height: 1px;
+      background: var(--accent);
+    }
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+      margin-right: 6px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 900px; }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(72px, 12vw, 160px);
+      line-height: 0.92;
+      letter-spacing: -1px;
+      color: var(--white);
+      margin-bottom: 32px;
+    }
+    .hero-title .accent { color: var(--accent); }
+    .hero-title .outline {
+      -webkit-text-stroke: 1px var(--white);
+      color: transparent;
+    }
+    .hero-sub {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--dim);
+      max-width: 480px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--black);
+      padding: 16px 36px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); }
+    .btn-ghost {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white);
+      border: 1px solid var(--border);
+      padding: 16px 36px;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--white); transform: translateY(-2px); }
+    .hero-stat-row {
+      position: absolute;
+      right: 48px;
+      bottom: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      text-align: right;
+      z-index: 2;
+    }
+    .hero-stat span {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 42px;
+      color: var(--white);
+      line-height: 1;
+    }
+    .hero-stat small {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* MARQUEE */
+    .marquee-wrap {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      padding: 14px 0;
+      background: var(--off-black);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 0;
+      animation: marquee 18s linear infinite;
+      width: max-content;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee-item {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 0 40px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+    .marquee-item::after {
+      content: '●';
+      color: var(--accent);
+      font-size: 8px;
+    }
+
+    /* SECTION BASE */
+    section { padding: 120px 48px; }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label::before {
+      content: '//';
+      opacity: 0.5;
+    }
+
+    /* HOW IT WORKS */
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .how-card {
+      background: var(--panel);
+      padding: 52px 44px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .how-card:hover { border-color: var(--accent); }
+    .how-card::before {
+      content: attr(data-num);
+      position: absolute;
+      top: -10px;
+      right: 24px;
+      font-family: var(--font-display);
+      font-size: 120px;
+      color: rgba(255,255,255,0.03);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .how-icon {
+      width: 48px; height: 48px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .how-icon svg { width: 22px; height: 22px; fill: var(--black); }
+    .how-card h3 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .how-card p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--dim);
+    }
+
+    /* PRICING */
+    .pricing-section { background: var(--off-black); }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .pricing-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 48px 36px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .pricing-card:hover { transform: translateY(-6px); border-color: rgba(255,60,31,0.4); }
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: var(--black);
+    }
+    .pricing-card.featured::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: -1px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--black);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      padding: 5px 16px;
+      white-space: nowrap;
+    }
+    .pricing-tier {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .pricing-price {
+      font-family: var(--font-display);
+      font-size: 72px;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .pricing-price sup { font-size: 28px; vertical-align: top; margin-top: 12px; }
+    .pricing-cadence {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--dim);
+      margin-bottom: 36px;
+    }
+    .pricing-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 32px;
+    }
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      margin-bottom: 40px;
+    }
+    .pricing-features li {
+      font-size: 14px;
+      color: var(--dim);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .pricing-features li::before {
+      content: '→';
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .pricing-features li.highlight { color: var(--white); }
+    .btn-pricing {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 15px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--white);
+      transition: all 0.2s;
+      display: block;
+    }
+    .btn-pricing:hover, .pricing-card.featured .btn-pricing {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--black);
+    }
+    .pricing-note {
+      text-align: center;
+      margin-top: 32px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 1px;
+    }
+
+    /* ABOUT / WHY */
+    .why-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 120px;
+      align-items: start;
+      margin-top: 64px;
+    }
+    .why-title {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+    .why-title em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .why-body {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--dim);
+      margin-bottom: 40px;
+    }
+    .why-specs {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .spec-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .spec-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--white);
+      letter-spacing: 1px;
+    }
+    .spec-value.good { color: var(--accent2); }
+
+    /* PLATFORMS */
+    .platforms-section { background: var(--panel); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .platforms-title {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 5vw, 56px);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .platforms-sub {
+      text-align: center;
+      font-size: 15px;
+      color: var(--dim);
+      margin-bottom: 64px;
+    }
+    .platforms-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .platform-pill {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      transition: all 0.2s;
+    }
+    .platform-pill:hover, .platform-pill.active {
+      border-color: var(--accent);
+      color: var(--white);
+      background: rgba(255,60,31,0.08);
+    }
+
+    /* TESTIMONIALS */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+    .testimonial {
+      background: var(--panel);
+      padding: 40px 36px;
+      border: 1px solid var(--border);
+    }
+    .testimonial-text {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--white);
+      margin-bottom: 28px;
+      font-style: italic;
+    }
+    .testimonial-text::before { content: '"'; color: var(--accent); font-family: var(--font-display); font-size: 40px; line-height: 0; vertical-align: -14px; margin-right: 4px; }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .author-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .author-name {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .author-role {
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    /* CTA */
+    .cta-section {
+      text-align: center;
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(255,60,31,0.1) 0%, transparent 70%);
+    }
+    .cta-title {
+      font-family: var(--font-display);
+      font-size: clamp(52px, 9vw, 110px);
+      line-height: 0.95;
+      letter-spacing: -1px;
+      position: relative;
+      z-index: 2;
+    }
+    .cta-title .outline {
+      -webkit-text-stroke: 1px var(--white);
+      color: transparent;
+    }
+    .cta-sub {
+      font-size: 16px;
+      color: var(--dim);
+      margin: 24px auto 48px;
+      max-width: 440px;
+      position: relative;
+      z-index: 2;
+    }
+    .cta-actions { position: relative; z-index: 2; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* CONTACT */
+    .contact-section { background: var(--off-black); }
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+      margin-top: 64px;
+    }
+    .contact-info h2 {
+      font-family: var(--font-display);
+      font-size: 52px;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .contact-info p {
+      font-size: 15px;
+      color: var(--dim);
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .contact-detail-icon {
+      width: 32px; height: 32px;
+      background: rgba(255,60,31,0.15);
+      border: 1px solid rgba(255,60,31,0.3);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-detail-icon svg { width: 14px; height: 14px; fill: var(--accent); }
+    .contact-detail span {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--white);
+    }
+    .contact-form { display: flex; flex-direction: column; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .form-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--border); }
+    textarea.form-input { resize: vertical; min-height: 120px; }
+    .form-submit {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--black);
+      border: none;
+      padding: 16px 36px;
+      cursor: none;
+      transition: background 0.2s, transform 0.2s;
+      align-self: flex-start;
+    }
+    .form-submit:hover { background: var(--accent2); transform: translateY(-2px); }
+
+    /* FOOTER */
+    footer {
+      padding: 40px 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-copy {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--dim);
+    }
+    .footer-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--white); }
+
+    /* ANIMATIONS */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      section { padding: 80px 24px; }
+      .hero { padding: 0 24px 60px; }
+      .how-grid, .pricing-grid, .testimonials-grid,
+      .why-layout, .contact-layout { grid-template-columns: 1fr; }
+      .pricing-grid { gap: 16px; }
+      .hero-stat-row { display: none; }
+      footer { padding: 28px 24px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">AALL<span>IE</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Book a Stream →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="live-dot"></span> Aallie — POV Streaming for Artists</div>
+    <h1 class="hero-title">
+      YOUR<br/>
+      <span class="outline">EYES.</span><br/>
+      <span class="accent">THEIR STAGE.</span>
+    </h1>
+    <p class="hero-sub">The most immersive POV live streaming experience for musicians — hands-free, multi-platform, zero setup complexity.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">View Packages →</a>
+      <a href="#how" class="btn-ghost">How It Works</a>
+    </div>
+  </div>
+  <div class="hero-stat-row">
+    <div class="hero-stat"><span>8+</span><small>Platforms Simultaneously</small></div>
+    <div class="hero-stat"><span>43g</span><small>Featherlight Glasses</small></div>
+    <div class="hero-stat"><span>119°</span><small>Field of View</small></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item">YouTube Live</div>
+    <div class="marquee-item">Twitch</div>
+    <div class="marquee-item">TikTok Live</div>
+    <div class="marquee-item">Instagram Live</div>
+    <div class="marquee-item">X / Twitter</div>
+    <div class="marquee-item">True POV Streaming</div>
+    <div class="marquee-item">Aallie Smart Glasses</div>
+    <div class="marquee-item">No Camera Crew</div>
+    <div class="marquee-item">Hands-Free</div>
+    <div class="marquee-item">YouTube Live</div>
+    <div class="marquee-item">Twitch</div>
+    <div class="marquee-item">TikTok Live</div>
+    <div class="marquee-item">Instagram Live</div>
+    <div class="marquee-item">X / Twitter</div>
+    <div class="marquee-item">True POV Streaming</div>
+    <div class="marquee-item">Aallie Smart Glasses</div>
+    <div class="marquee-item">No Camera Crew</div>
+    <div class="marquee-item">Hands-Free</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">How It Works</div>
+  <div class="how-grid">
+    <div class="how-card fade-up" data-num="01">
+      <div class="how-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+      </div>
+      <h3>Book Your Session</h3>
+      <p>Choose your package — single session, event night, or monthly retainer. We confirm your stream date and platforms within 24 hours.</p>
+    </div>
+    <div class="how-card fade-up" data-num="02">
+      <div class="how-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      </div>
+      <h3>Put On The Glasses</h3>
+      <p>We arrive with Aallie smart glasses pre-configured. You wear them like normal glasses — featherlight, prescription-ready, completely natural-looking.</p>
+    </div>
+    <div class="how-card fade-up" data-num="03">
+      <div class="how-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+      </div>
+      <h3>Go Live Everywhere</h3>
+      <p>We handle the streaming setup — your audience watches in real-time from your exact perspective on YouTube, Twitch, TikTok, Instagram, and more, simultaneously.</p>
+    </div>
+    <div class="how-card fade-up" data-num="04">
+      <div class="how-icon">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      </div>
+      <h3>Grow Your Audience</h3>
+      <p>Fans experience your music from inside your headspace. Optional highlight clips delivered after each session for Instagram and TikTok repurposing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="pricing-section">
+  <div class="section-label">Pricing</div>
+  <div class="pricing-grid">
+    <!-- Single Session -->
+    <div class="pricing-card fade-up">
+      <div class="pricing-tier">Single Session</div>
+      <div class="pricing-price"><sup>$</sup>150</div>
+      <div class="pricing-cadence">/ per stream session</div>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li class="highlight">1 live stream session (up to 3 hrs)</li>
+        <li>Aallie glasses setup & support</li>
+        <li>1 platform (YouTube or Twitch)</li>
+        <li>Full-session video file</li>
+        <li>Next-day delivery</li>
+      </ul>
+      <a href="#contact" class="btn-pricing">Book Session</a>
+    </div>
+    <!-- Event Package -->
+    <div class="pricing-card featured fade-up">
+      <div class="pricing-tier">Event Package</div>
+      <div class="pricing-price"><sup>$</sup>400</div>
+      <div class="pricing-cadence">/ per event night</div>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li class="highlight">Full event night (up to 6 hrs)</li>
+        <li class="highlight">All platforms simultaneously</li>
+        <li>Aallie setup & live monitoring</li>
+        <li>Multiple artists / sets supported</li>
+        <li>Full video files per set</li>
+        <li>2 highlight clips for social media</li>
+      </ul>
+      <a href="#contact" class="btn-pricing">Book Event</a>
+    </div>
+    <!-- Monthly Retainer -->
+    <div class="pricing-card fade-up">
+      <div class="pricing-tier">Monthly Retainer</div>
+      <div class="pricing-price"><sup>$</sup>700</div>
+      <div class="pricing-cadence">/ per month</div>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li class="highlight">4 stream sessions per month</li>
+        <li class="highlight">Priority booking & scheduling</li>
+        <li>All platforms simultaneously</li>
+        <li>Dedicated stream manager</li>
+        <li>4 highlight clips per month</li>
+        <li>Monthly performance report</li>
+      </ul>
+      <a href="#contact" class="btn-pricing">Start Retainer</a>
+    </div>
+  </div>
+  <p class="pricing-note">✦ Revenue share options available for emerging artists — ask us about it</p>
+</section>
+
+<!-- ABOUT / WHY -->
+<section id="about">
+  <div class="section-label">The Technology</div>
+  <div class="why-layout">
+    <div>
+      <h2 class="why-title fade-up">
+        The world's most <em>immersive</em> artist stream.
+      </h2>
+      <p class="why-body fade-up">We use Aallie smart glasses — purpose-built for true multi-platform live streaming. Your fans don't just watch you perform. They see exactly what you see: the crowd, your hands, the lights, the stage — all in real time.</p>
+      <p class="why-body fade-up" style="margin-top:-20px;">No bulky rigs. No camera crew in the way. No OBS laptop setup. Just a pair of featherlight glasses and a phone.</p>
+    </div>
+    <div class="why-specs fade-up">
+      <div class="spec-row">
+        <span class="spec-label">Camera Resolution</span>
+        <span class="spec-value good">12MP / HD Video</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Field of View</span>
+        <span class="spec-value good">119°</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Weight</span>
+        <span class="spec-value good">43 grams</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Battery Life</span>
+        <span class="spec-value good">12+ hrs + Infinity Cable</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Audio</span>
+        <span class="spec-value">3 Mics + Stereo Speakers</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Platforms</span>
+        <span class="spec-value good">8+ Simultaneously</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Setup Time</span>
+        <span class="spec-value good">&lt; 5 minutes</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Prescription Ready</span>
+        <span class="spec-value good">Yes</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORMS -->
+<section class="platforms-section">
+  <div class="section-label" style="justify-content:center">Platforms</div>
+  <h2 class="platforms-title fade-up">Stream everywhere at once.</h2>
+  <p class="platforms-sub fade-up">Your POV, broadcast live to every platform your fans follow you on.</p>
+  <div class="platforms-row">
+    <div class="platform-pill active">YouTube Live</div>
+    <div class="platform-pill active">Twitch</div>
+    <div class="platform-pill active">TikTok Live</div>
+    <div class="platform-pill active">Instagram Live</div>
+    <div class="platform-pill active">X / Twitter</div>
+    <div class="platform-pill">Facebook Live</div>
+    <div class="platform-pill">Custom RTMP</div>
+    <div class="platform-pill">+ More</div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="section-label">Artist Feedback</div>
+  <div class="testimonials-grid">
+    <div class="testimonial fade-up">
+      <p class="testimonial-text">I've done camera setups before but nothing compares to this. The crowd went crazy knowing they were seeing the show from my eyes. My Twitch numbers tripled that night.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">M</div>
+        <div>
+          <div class="author-name">Marcus T.</div>
+          <div class="author-role">Hip-Hop Artist, Chicago</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial fade-up">
+      <p class="testimonial-text">Put the glasses on, played my set, and my whole YouTube audience was literally there with me in the venue. The setup took 3 minutes. I was shocked how easy it was.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">S</div>
+        <div>
+          <div class="author-name">Sofia R.</div>
+          <div class="author-role">Singer-Songwriter, LA</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial fade-up">
+      <p class="testimonial-text">The retainer package is worth every dollar. My fans now tune in to every show because the POV experience is addictive. It's something no other artist in my city is doing.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">D</div>
+        <div>
+          <div class="author-name">Devon K.</div>
+          <div class="author-role">DJ / Producer, Atlanta</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-section">
+  <h2 class="cta-title fade-up">
+    READY TO GO<br/>
+    <span class="outline">LIVE?</span>
+  </h2>
+  <p class="cta-sub fade-up">Book your first session and let your audience experience your music from the inside.</p>
+  <div class="cta-actions fade-up">
+    <a href="#contact" class="btn-primary">Book a Stream →</a>
+    <a href="#pricing" class="btn-ghost">See Pricing</a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section">
+  <div class="section-label">Contact</div>
+  <div class="contact-layout">
+    <div class="contact-info fade-up">
+      <h2>Let's talk streams.</h2>
+      <p>Ready to book or just curious? Drop us a message and we'll get back to you within 24 hours to talk about your setup.</p>
+      <div class="contact-detail">
+        <div class="contact-detail-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </div>
+        <span>hello@aallie.io</span>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-detail-icon">
+          <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        </div>
+        <span>+1 (555) 000-0000</span>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-detail-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <span>Serving artists nationwide</span>
+      </div>
+    </div>
+    <form class="contact-form fade-up" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" class="form-input" placeholder="Stage name or real name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" placeholder="you@email.com" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Artist Type</label>
+        <select class="form-input" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
+          <option style="background:#161616">Musician / Band</option>
+          <option style="background:#161616">DJ / Producer</option>
+          <option style="background:#161616">Singer-Songwriter</option>
+          <option style="background:#161616">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Package Interest</label>
+        <select class="form-input" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
+          <option style="background:#161616">Single Session — $150</option>
+          <option style="background:#161616">Event Package — $400</option>
+          <option style="background:#161616">Monthly Retainer — $700/mo</option>
+          <option style="background:#161616">Revenue Share — Let's talk</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tell Us About Your Show</label>
+        <textarea class="form-input" placeholder="Venue, date, platforms you want to stream to, anything else..."></textarea>
+      </div>
+      <button type="submit" class="form-submit">Send Message →</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">AALL<span>IE</span></div>
+  <ul class="footer-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <p class="footer-copy">© 2026 Aallie. All rights reserved.</p>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+  document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+  function animateCursor() {
+    cursor.style.transform = `translate(${mouseX - 5}px, ${mouseY - 5}px)`;
+    ringX += (mouseX - ringX) * 0.12;
+    ringY += (mouseY - ringY) * 0.12;
+    ring.style.transform = `translate(${ringX - 18}px, ${ringY - 18}px)`;
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+  document.querySelectorAll('a, button, .platform-pill, .how-card').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.transform += ' scale(2)'; ring.style.width = '60px'; ring.style.height = '60px'; });
+    el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; });
+  });
+
+  // Fade-up on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Form submit
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.form-submit');
+    btn.textContent = 'Message Sent ✓';
+    btn.style.background = '#ffb800';
+    setTimeout(() => { btn.textContent = 'Send Message →'; btn.style.background = ''; }, 3000);
+  }
+</script>
+</body>
+</html>
