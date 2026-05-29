@@ -1083,20 +1083,20 @@
         <span>Serving artists nationwide</span>
       </div>
     </div>
-    <form class="contact-form fade-up" onsubmit="handleSubmit(event)">
+    <form class="contact-form fade-up" id="contactForm">
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Your Name</label>
-          <input type="text" class="form-input" placeholder="Stage name or real name" />
+          <input type="text" class="form-input" name="name" placeholder="Stage name or real name" required />
         </div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input type="email" class="form-input" placeholder="you@email.com" />
+          <input type="email" class="form-input" name="email" placeholder="you@email.com" required />
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Artist Type</label>
-        <select class="form-input" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
+        <select class="form-input" name="artistType" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
           <option style="background:#161616">Musician / Band</option>
           <option style="background:#161616">DJ / Producer</option>
           <option style="background:#161616">Singer-Songwriter</option>
@@ -1105,7 +1105,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Package Interest</label>
-        <select class="form-input" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
+        <select class="form-input" name="packageInterest" style="appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"%23666\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 14px center;">
           <option style="background:#161616">Single Session — $150</option>
           <option style="background:#161616">Event Package — $400</option>
           <option style="background:#161616">Monthly Retainer — $700/mo</option>
@@ -1114,7 +1114,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Tell Us About Your Show</label>
-        <textarea class="form-input" placeholder="Venue, date, platforms you want to stream to, anything else..."></textarea>
+        <textarea class="form-input" name="message" placeholder="Venue, date, platforms you want to stream to, anything else..." required></textarea>
       </div>
       <button type="submit" class="form-submit">Send Message →</button>
     </form>
@@ -1158,13 +1158,36 @@
   document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
   // Form submit
-  function handleSubmit(e) {
+  document.getElementById('contactForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('.form-submit');
-    btn.textContent = 'Message Sent ✓';
-    btn.style.background = '#ffb800';
-    setTimeout(() => { btn.textContent = 'Send Message →'; btn.style.background = ''; }, 3000);
-  }
+    const form = e.target;
+    const btn = form.querySelector('.form-submit');
+
+    try {
+      const formData = new FormData(form);
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+
+      if (response.ok) {
+        btn.textContent = 'Message Sent ✓';
+        btn.style.background = '#ffb800';
+        form.reset();
+        setTimeout(() => { btn.textContent = 'Send Message →'; btn.style.background = ''; }, 3000);
+      } else {
+        btn.textContent = 'Error — Try Again';
+        btn.style.background = '#ff6b6b';
+        setTimeout(() => { btn.textContent = 'Send Message →'; btn.style.background = ''; }, 3000);
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      btn.textContent = 'Error — Try Again';
+      btn.style.background = '#ff6b6b';
+      setTimeout(() => { btn.textContent = 'Send Message →'; btn.style.background = ''; }, 3000);
+    }
+  });
 </script>
 </body>
 </html>

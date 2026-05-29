@@ -1,0 +1,10 @@
+[
+  {
+    "timestamp": "2026-05-29T06:46:12.290Z",
+    "name": "Test Artist",
+    "email": "test@example.com",
+    "artistType": "Musician / Band",
+    "packageInterest": "Event Package — $400",
+    "message": "Test message from CLI"
+  }
+]
