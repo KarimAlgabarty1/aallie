@@ -1,49 +1,69 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
-app.post('/api/contact', (req, res) => {
+// Initialize database table
+const initDB = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_submissions (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        artist_type VARCHAR(255),
+        package_interest VARCHAR(255),
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Database table initialized');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+  }
+};
+
+app.post('/api/contact', async (req, res) => {
   const { name, email, artistType, packageInterest, message } = req.body;
 
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const submission = {
-    timestamp: new Date().toISOString(),
-    name,
-    email,
-    artistType,
-    packageInterest,
-    message
-  };
+  try {
+    await pool.query(
+      `INSERT INTO contact_submissions (name, email, artist_type, package_interest, message)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [name, email, artistType, packageInterest, message]
+    );
 
-  const submissionsFile = path.join(__dirname, 'submissions.json');
-  let submissions = [];
-
-  if (fs.existsSync(submissionsFile)) {
-    const data = fs.readFileSync(submissionsFile, 'utf8');
-    submissions = JSON.parse(data || '[]');
+    console.log('New contact submission:', { name, email, artistType, packageInterest });
+    res.json({ success: true, message: 'Thank you for reaching out!' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to submit form' });
   }
-
-  submissions.push(submission);
-  fs.writeFileSync(submissionsFile, JSON.stringify(submissions, null, 2));
-
-  console.log('New contact submission:', submission);
-  res.json({ success: true, message: 'Thank you for reaching out!' });
 });
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Aallie running on port ${PORT}`);
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Aallie running on port ${PORT}`);
+  });
 });
